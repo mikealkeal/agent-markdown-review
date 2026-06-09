@@ -4,6 +4,31 @@
 
 When an AI agent writes a `.md` (README, spec, ADR, notes, docs), it does it in one forward pass and does not re-read itself. You end up asking "re-read and check" every time — and every time it finds something. This wires that review into the right trigger — structural checks **enforced** on write, a fresh-context semantic pass on the yield/commit boundary — so you stop asking.
 
+```mermaid
+flowchart TD
+    W["✍️ Agent writes / edits a .md"] --> V
+
+    subgraph L1["LAYER 1 · on write · $0 · deterministic"]
+        V{"Structural check<br/>frontmatter · fences ·<br/>placeholders · broken links"}
+    end
+
+    V -->|issues| F1["Agent fixes inline"]
+    F1 --> W
+    V -->|clean| Y["🛑 Agent yields / commits"]
+
+    Y --> C{".md changed since<br/>last review?"}
+    C -->|no| DONE(["✅ done — added cost: $0"])
+    C -->|"yes · up to MAX passes"| R
+
+    subgraph L2["LAYER 2 · on yield · fresh context · cheap model"]
+        R["🔍 Reviewer subagent reads the doc<br/>as EXTERNAL input<br/>gaps · contradictions · dubious claims"]
+    end
+
+    R -->|findings| F2["Agent applies fixes"]
+    F2 --> Y
+    R -->|RAS| DONE
+```
+
 ## Two layers
 
 | Layer | Catches | How | Cost |
