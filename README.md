@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="couv.jpg" alt="agent-markdown-review — because a model is blind to its own mistakes" width="760">
+</p>
+
 # agent-markdown-review
 
 **The ecosystem lints your *code* as the agent writes it. This validates what the agent *wrote* — your Markdown — structurally *and* semantically.**
