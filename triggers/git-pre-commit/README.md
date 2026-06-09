@@ -5,18 +5,23 @@ Fires **at commit time**, in any repo, with no dependency on a specific agent or
 - **Layer 1** (always) — validates staged Markdown with [the validator](../../validator/index.mjs). No LLM required. Blocks the commit on structural issues.
 - **Layer 2** (opt-in) — fresh-context semantic review of each staged `.md` via **any LLM CLI**, using [the shared brief](../../prompts/reviewer-brief.md). Advisory (does not block).
 
-## Install
+The hook resolves the validator + brief from **`$AMR_HOME` if set, otherwise `<your-repo>/.agent-markdown-review/`**.
 
-1. Make the validator + brief available to your repo. Either vendor them into `./.agent-markdown-review/` (copy this repo's `validator/` and `prompts/`), or point `AMR_HOME` at a checkout:
+1. Make the validator + brief available, either way:
 
    ```bash
+   # Option A — point at a checkout of this repo
    export AMR_HOME=/path/to/agent-markdown-review
+
+   # Option B — vendor them into the repo you want to guard
+   mkdir -p .agent-markdown-review
+   cp -r /path/to/agent-markdown-review/validator /path/to/agent-markdown-review/prompts .agent-markdown-review/
    ```
 
-2. Install the hook:
+2. Install the hook into the repo you want to guard (run from that repo; source path is your checkout of this project, or `$AMR_HOME`):
 
    ```bash
-   cp triggers/git-pre-commit/pre-commit .git/hooks/pre-commit
+   cp "$AMR_HOME/triggers/git-pre-commit/pre-commit" .git/hooks/pre-commit
    chmod +x .git/hooks/pre-commit
    ```
 

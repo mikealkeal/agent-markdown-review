@@ -33,7 +33,7 @@ Write / edit a .md   (any session, any topic)
 
 ## Layer 1 — deterministic validator
 
-Pure, dependency-free ([validator/markdown.mjs](validator/markdown.mjs)). Flags only the objectively-wrong or clearly-incomplete:
+Pure and dependency-free ([validator/markdown.mjs](validator/markdown.mjs)). *Deterministic* here means: no LLM, fixed rules — same input, same output (not a formal program property). It flags only the objectively-wrong or clearly-incomplete:
 
 - unclosed YAML frontmatter;
 - unbalanced code fences;
@@ -44,13 +44,13 @@ Conservative on purpose — it must not nudge the agent into "fixing" correct co
 
 ## Layer 2 — fresh-context semantic review
 
-The reviewer reads the document as **external input** (see [the brief](prompts/reviewer-brief.md)), so its errors are decorrelated from the author's. It is gated so cost stays marginal:
+The trigger fires on the yield/commit boundary — a `Stop` hook in the Claude Code adapter, a `pre-commit` in the git adapter. When a `.md` changed, the reviewer reads the document as **external input** (see [the brief](prompts/reviewer-brief.md)), so its errors are decorrelated from the author's. It is gated so cost stays marginal:
 
 1. nothing changed → no review;
 2. a file is re-reviewed only if its **content changed** since the last review (sha256);
-3. at most `AMR_REVIEW_MAX` passes per file per session (runaway cap).
+3. at most `AMR_REVIEW_MAX` (default 2) passes per file per session — tracked in a per-session state file, so the cap persists across turns.
 
-The crucial property is the **fresh context** — a separate reviewer (subagent or separate session) sees what the generating context cannot.
+The crucial property is the **fresh context** — a separate reviewer (subagent or separate session) sees what the generating context cannot. Its value is in **detection**: the agent then applies the fix *with that external signal in hand*, which is a different thing from unprompted same-context self-review.
 
 ## Lifecycle (example)
 

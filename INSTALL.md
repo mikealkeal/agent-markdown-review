@@ -16,7 +16,7 @@ node setup.mjs
 
 Then **restart your Claude Code session** if the hooks do not fire immediately (hooks are read at session start).
 
-Uninstall (removes our hooks, keeps files):
+Uninstall — removes our two hooks from `settings.json` idempotently, and leaves the installed files in `~/.claude/agent-markdown-review/` (re-running `node setup.mjs` afterwards is idempotent):
 
 ```bash
 node setup.mjs --uninstall
@@ -28,8 +28,9 @@ See [triggers/git-pre-commit/README.md](triggers/git-pre-commit/README.md). Summ
 
 ## Requirements
 
-- **Node 18+** on `PATH` (the validator and the Claude Code logic are Node, dependency-free).
-- For Layer 2 under Claude Code: the `claude` CLI on `PATH` (it spawns a Sonnet subagent inside your session, using your normal auth — no API key needed).
+- **Node 18+** on `PATH` — the validator and the Claude Code logic are Node, with **no npm dependencies** (standard library only; there is no `package.json` to install).
+- **Layer 2 under Claude Code needs nothing extra.** The Stop hook only emits a directive; your agent then spawns an in-session reviewer subagent (Agent tool, model `sonnet`) using your normal session — no API key, no separate process.
+- An LLM CLI (`claude -p`, `llm`, `ollama`, …) is needed **only for the generic git trigger's** optional Layer 2 (`LLM_CMD`), not for Claude Code.
 
 ## Gotchas (learned the hard way)
 
@@ -37,7 +38,7 @@ See [triggers/git-pre-commit/README.md](triggers/git-pre-commit/README.md). Summ
 - **Never hand-merge `settings.json`.** Use `setup.mjs`; a careless manual edit can clobber existing hooks or break the JSON. The installer backs up and merges only its own entries.
 - **A `gitleaks` (or other) pre-commit in your *own* dotfiles repo** may block commits if the tool is not on the hook shell's `PATH`. That is unrelated to this project, but if you hit it: install the tool or ensure its directory is on `PATH` (do not blindly `--no-verify` a secret scanner).
 - **Windows / Git Bash:** hooks run under Git Bash; paths use `$HOME` so the same `settings.json` works across machines. Node receives Windows paths and handles them; the adapter also normalizes MSYS `/c/...` paths defensively.
-- **Layer 2 is a deterministic *trigger*, not a forced execution.** The Stop hook reliably fires and injects the review directive, but the review itself runs because the agent follows that directive. Layer 1 (`exit 2`) is the hard-deterministic half.
+- **Layer 2: the *trigger* is systematic, the *execution* is not forced.** The Stop hook fires every time a `.md` changed and injects the review directive; the review then runs because the agent follows that directive — reliable in practice, but an instruction (an agent could in principle ignore it). Layer 1 (`exit 2`) is the hard-deterministic half.
 
 ## Verify it works
 
