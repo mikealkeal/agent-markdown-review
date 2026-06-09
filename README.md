@@ -13,7 +13,7 @@ When an AI agent writes a `.md` (README, spec, ADR, notes, docs), it does it in 
    |  frontmatter . fences . placeholders . local links |
    +----------------------------------------------------+
         |
-        |-- issues --> agent fixes (= a write) --> re-enters LAYER 1 ^
+        |-- issues --> agent fixes (= a write) --> back to LAYER 1 (top)
         |
         '-- clean  -->  agent yields / commits
                             |
@@ -25,7 +25,9 @@ When an AI agent writes a `.md` (README, spec, ADR, notes, docs), it does it in 
         |
         |-- no / capped -->  done  -  added cost: $0
         |
-        '-- yes -->
+        '-- yes
+            |
+            v
    +----------------------------------------------------+
    |  LAYER 2  -  on yield  -  fresh context  -  cheap   |
    |  reads the doc as EXTERNAL input ->                 |
@@ -35,7 +37,7 @@ When an AI agent writes a `.md` (README, spec, ADR, notes, docs), it does it in 
         |-- RAS -->  done
         |
         '-- findings --> agent applies fix (= a write)
-                             '--> re-enters LAYER 1 ^   (loop bounded by MAX = 2)
+                             '--> back to LAYER 1 (top), bounded by MAX = 2
 ```
 
 ## Two layers
