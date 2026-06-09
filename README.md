@@ -36,7 +36,19 @@ flowchart TD
 | **1 — Deterministic** | unclosed frontmatter/fences, unresolved placeholders, **broken local links** | a validator run on write → fed back to the agent | none, instant, guaranteed |
 | **2 — Semantic** | gaps, internal contradictions, dubious claims, blocking ambiguities | a **fresh-context** reviewer (errors decorrelated from the author's) | one model call (scales with file size), only when a `.md` changed |
 
-Why two layers and not just "re-read it"? Because same-context self-review is the *weakest* lever — see [METHODOLOGY.md](METHODOLOGY.md) (research-backed).
+## The core idea — review as *external* input
+
+An LLM can't reliably proofread its own output **from inside the context that produced it**. The mistake lives in the model's own reasoning, where it's a blind spot. The fix isn't a smarter prompt — it's changing the content's *position*: from *"mine"* to **external input seen by a fresh reader**.
+
+| | "Included" context — *self-review* | **External** context — *this approach* |
+|---|---|---|
+| Where the content sits | in the model's own context (it wrote it) | handed to a **fresh reader** as external input |
+| Sees its own mistakes? | poorly — blind to what it just generated | yes — errors decorrelated from the author |
+| What the research shows | self-correction degrades without an external signal | the same error, seen as external, is caught far more often |
+| Typical move | "re-read and check" in the same chat | a separate reviewer (subagent / fresh session) |
+| Outcome | finds little; can turn right into wrong | finds the real gaps |
+
+That's the whole bet: both layers exist to get the document **out** of the generating context — a deterministic checker (no model at all) and a fresh-context reviewer. The fancy prompt is secondary; the *position* of the content is what matters. Sources and detail: [METHODOLOGY.md](METHODOLOGY.md).
 
 ## Cost
 
@@ -54,6 +66,18 @@ node setup.mjs
 ```
 
 Copies the runtime into `~/.claude/agent-markdown-review/`, registers a `PostToolUse` hook (Layer 1) and a `Stop` hook (Layer 2) **non-destructively** in your `settings.json`, and self-tests. Full playbook + gotchas: [INSTALL.md](INSTALL.md).
+
+## How to use
+
+Once installed, **there is nothing to run.** You write Markdown as usual and the review happens on its own:
+
+1. **You (or your agent) write or edit a `.md`** → Layer 1 validates it on the spot; any structural issue (broken link, unclosed fence, leftover placeholder) is fed straight back and fixed before moving on.
+2. **The agent finishes its turn** → if a `.md` changed, Layer 2 fires: the agent spawns a fresh-context reviewer that reads the doc as external input and reports gaps / contradictions / dubious claims; the agent applies the fixes (or flags a point as intentional), then stops.
+3. **Nothing changed?** → both layers stay silent and cost nothing.
+
+No slash command, no manual step. Pause it with `node setup.mjs --uninstall` (or remove just the `Stop` entry to keep Layer 1 only). Tune with `AMR_REVIEW_MAX` and `AMR_REVIEW_MODEL`.
+
+With the **git pre-commit** flavor, "using it" is simply `git commit`: staged `.md` is validated, and reviewed too if you set `LLM_CMD`. See [triggers/git-pre-commit/](triggers/git-pre-commit/README.md).
 
 ## Not tied to Claude Code
 
