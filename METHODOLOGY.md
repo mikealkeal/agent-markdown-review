@@ -48,7 +48,7 @@ The trigger fires on the yield/commit boundary — a `Stop` hook in the Claude C
 
 1. nothing changed → no review;
 2. a file is re-reviewed only if its **content changed** since the last review (sha256);
-3. at most `AMR_REVIEW_MAX` (default 2) passes per file per session — tracked in a per-session state file, so the cap persists across turns.
+3. at most `AMR_REVIEW_MAX` (default 2) passes per file per session — a *session* is one Claude Code session, tracked in a temp file keyed by its id (a new session resets the cap).
 
 The crucial property is the **fresh context** — a separate reviewer (subagent or separate session) sees what the generating context cannot. Its value is in **detection**: the agent then applies the fix *with that external signal in hand*, which is a different thing from unprompted same-context self-review.
 
@@ -60,7 +60,7 @@ The crucial property is the **fresh context** — a separate reviewer (subagent 
 2. **Layer 1** flags the broken link → the agent fixes it in the turn.
 3. The agent yields.
 4. **Layer 2** sees `guide.md` changed → asks for a fresh-context review.
-5. The reviewer finds the substance gap → the agent fixes it (or declares it intentional).
+5. The reviewer finds the substance gap → the agent fixes it, or **declares it intentional and leaves the file unchanged** — an unchanged file (same hash) is skipped next time, so a false positive never loops.
 6. Next yield: `guide.md` is unchanged → Layer 2 skips it. No loop.
 
 ## Foundations

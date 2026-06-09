@@ -72,7 +72,7 @@ The **hooks themselves cost $0** — they run no model. Layer 1 (validation) and
 - it runs on a **cheap, fast model** (Sonnet by default; set `AMR_REVIEW_MODEL`) — the review is near-mechanical, so the **decorrelated fresh context matters more than raw model power**;
 - it fires **only when a `.md` actually changed**, capped at `AMR_REVIEW_MAX` (default 2) passes per file per session.
 
-In practice: **free on every write**, plus one cheap call only when there is something new to review.
+In practice: **free on every write**, plus a cheap call — at most `AMR_REVIEW_MAX` per file — only when there is something new to review.
 
 ## Quickstart (Claude Code)
 
@@ -121,7 +121,7 @@ agent-markdown-review/
 ## Scope
 
 - **Semantic review (Layer 2):** any text document — the brief is format-agnostic.
-- **Structural validation (Layer 1):** Markdown today. The `validator/` dispatches by extension; add `validator/<format>.mjs` for more (PRs welcome).
+- **Structural validation (Layer 1):** Markdown today (non-Markdown files are skipped — no error). The `validator/` dispatches by extension; add `validator/<format>.mjs` for more (PRs welcome).
 
 ## Honest limitations
 
