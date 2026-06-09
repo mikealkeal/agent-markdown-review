@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# agent-markdown-review — generic git pre-commit trigger (any editor, any agent, any LLM).
+#
+# Layer 1 (always): validate staged Markdown deterministically — no LLM required.
+# Layer 2 (opt-in):  fresh-context semantic review of each staged .md via ANY LLM CLI,
+#                    enabled by setting $LLM_CMD (e.g. export LLM_CMD="claude -p").
+#
+# Point AMR_HOME at your checkout/vendored copy of agent-markdown-review.
+# Defaults to "<repo>/.agent-markdown-review".
+#
+# Install: copy this file to .git/hooks/pre-commit and `chmod +x` it.
+
+set -e
+
+AMR_HOME="${AMR_HOME:-$(git rev-parse --show-toplevel)/.agent-markdown-review}"
+
+files=$(git diff --cached --name-only --diff-filter=ACM | grep -Ei '\.(md|markdown|mdx)$' || true)
+[ -z "$files" ] && exit 0
+
+# ── Layer 1 — deterministic (blocks the commit on structural issues) ──────────
+node "$AMR_HOME/validator/index.mjs" $files || {
+  echo "✗ Markdown validation failed (Layer 1). Fix the issues above or amend." >&2
+  exit 1
+}
+
+# ── Layer 2 — optional semantic review (does NOT block; advisory) ─────────────
+if [ -n "$LLM_CMD" ]; then
+  for f in $files; do
+    echo "── fresh-context review: $f"
+    { cat "$AMR_HOME/prompts/reviewer-brief.md"; printf '\n\n---\n'; cat "$f"; } | $LLM_CMD || true
+  done
+fi
+
+exit 0

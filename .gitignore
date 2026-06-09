@@ -1,0 +1,14 @@
+# Node
+node_modules/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local runtime state (created by the triggers at runtime, never committed)
+amr-touched-*.txt
+amr-reviewed-*.json
+
+# Editor
+.vscode/
+.idea/

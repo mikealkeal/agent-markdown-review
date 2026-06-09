@@ -1,0 +1,28 @@
+{
+  "_comment": "Merge these two entries into your ~/.claude/settings.json hooks. `setup.mjs` does this for you non-destructively. Shown here for manual install / reference.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"$HOME/.claude/agent-markdown-review/triggers/claude-code/validate-md.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c \"$HOME/.claude/agent-markdown-review/triggers/claude-code/review-on-stop.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
