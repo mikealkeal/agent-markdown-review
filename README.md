@@ -16,16 +16,16 @@ flowchart TD
     F1 --> W
     V -->|clean| Y["🛑 Agent yields / commits"]
 
-    Y --> C{".md changed since<br/>last review?"}
-    C -->|no| DONE(["✅ done — added cost: $0"])
-    C -->|"yes · up to MAX passes"| R
+    Y --> C{".md changed<br/>and under MAX passes?<br/>(MAX default 2)"}
+    C -->|"no / capped"| DONE(["✅ done — added cost: $0"])
+    C -->|yes| R
 
     subgraph L2["LAYER 2 · on yield · fresh context · cheap model"]
         R["🔍 Reviewer subagent reads the doc<br/>as EXTERNAL input<br/>gaps · contradictions · dubious claims"]
     end
 
-    R -->|findings| F2["Agent applies fixes"]
-    F2 --> Y
+    R -->|findings| F2["Agent applies fixes = a write"]
+    F2 -->|re-validated| W
     R -->|RAS| DONE
 ```
 
