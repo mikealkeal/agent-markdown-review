@@ -13,6 +13,15 @@ When an AI agent writes a `.md` (README, spec, ADR, notes, docs), it does it in 
 
 Why two layers and not just "re-read it"? Because same-context self-review is the *weakest* lever — see [METHODOLOGY.md](METHODOLOGY.md) (research-backed).
 
+## Cost
+
+The **hooks themselves cost $0** — they run no model. Layer 1 (validation) and Layer 2's change-detection + review directive are pure logic. The *only* spend is the Layer 2 reviewer, and:
+
+- it runs on a **cheap, fast model** (Sonnet by default; set `AMR_REVIEW_MODEL`) — the review is near-mechanical, so the **decorrelated fresh context matters more than raw model power**;
+- it fires **only when a `.md` actually changed**, capped at `AMR_REVIEW_MAX` (default 2) passes per file per session.
+
+In practice: **free on every write**, plus one cheap call only when there is something new to review.
+
 ## Quickstart (Claude Code)
 
 ```bash

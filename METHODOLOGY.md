@@ -52,6 +52,8 @@ The trigger fires on the yield/commit boundary — a `Stop` hook in the Claude C
 
 The crucial property is the **fresh context** — a separate reviewer (subagent or separate session) sees what the generating context cannot. Its value is in **detection**: the agent then applies the fix *with that external signal in hand*, which is a different thing from unprompted same-context self-review.
 
+**Cost.** The trigger itself runs **no model** — Layer 1 validation and Layer 2's change-detection + directive are pure logic, so the hook is free. The only spend is the reviewer, which is a near-mechanical task (read + apply a fixed rubric): a cheap, fast model (Sonnet by default, `AMR_REVIEW_MODEL`) is the right fit — the decorrelated fresh context matters more than model power. Keep your strong model for the work; delegate the review to an inexpensive one.
+
 ## Lifecycle (example)
 
 1. The agent writes `guide.md` with a broken link and a substance gap.

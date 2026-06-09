@@ -34,6 +34,7 @@ Copy the runtime files under `~/.claude/agent-markdown-review/` (preserving `val
 | Env var | Default | Effect |
 |---------|---------|--------|
 | `AMR_REVIEW_MAX` | `2` | Max Layer-2 review passes per file per session |
+| `AMR_REVIEW_MODEL` | `sonnet` | Model for the Layer-2 reviewer subagent — a cheap/fast model is enough (decorrelation matters more than power). The hook itself runs no model and costs $0. |
 
 Remove the `Stop` entry from `settings.json` to disable Layer 2 (Layer 1 stays). Or run `node setup.mjs --uninstall`.
 

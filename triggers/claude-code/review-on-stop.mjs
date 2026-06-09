@@ -20,6 +20,9 @@ import { fileURLToPath } from 'node:url';
 
 const MAX = Math.max(1, parseInt(process.env.AMR_REVIEW_MAX || '2', 10) || 2);
 const MAX_FILES = 5;
+// The reviewer is a near-mechanical task (read + apply a rubric) — a cheap/fast model is
+// the right fit; what matters is the decorrelated fresh context, not raw model power.
+const MODEL = (process.env.AMR_REVIEW_MODEL || 'sonnet').replace(/["\\\n]/g, '');
 const here = path.dirname(fileURLToPath(import.meta.url));
 const briefPath = path.resolve(here, '../../prompts/reviewer-brief.md');
 
@@ -63,7 +66,7 @@ const fileList = todo.map((p) => `\`${p}\``).join(', ');
 const reason =
   `🔍 Fresh-context review — Markdown file(s) written/changed this turn: ${fileList}.\n` +
   `BEFORE stopping, for EACH file above: spawn a FRESH-CONTEXT reviewer subagent via the Agent ` +
-  `tool (model: "sonnet", subagent_type: "general-purpose") with this exact mandate:\n` +
+  `tool (model: "${MODEL}", subagent_type: "general-purpose") with this exact mandate:\n` +
   `« ${brief} »\n` +
   `The subagent reads the file(s) itself (no other context). Then apply the fixes it reports — ` +
   `or, if you judge a point intentional, say so explicitly. Then stop.`;
