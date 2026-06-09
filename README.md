@@ -4,29 +4,38 @@
 
 When an AI agent writes a `.md` (README, spec, ADR, notes, docs), it does it in one forward pass and does not re-read itself. You end up asking "re-read and check" every time — and every time it finds something. This wires that review into the right trigger — structural checks **enforced** on write, a fresh-context semantic pass on the yield/commit boundary — so you stop asking.
 
-```mermaid
-flowchart TD
-    W["✍️ Agent writes / edits a .md"] --> V
-
-    subgraph L1["LAYER 1 · on write · $0 · deterministic"]
-        V{"Structural check<br/>frontmatter · fences ·<br/>placeholders · broken links"}
-    end
-
-    V -->|issues| F1["Agent fixes inline"]
-    F1 --> W
-    V -->|clean| Y["🛑 Agent yields / commits"]
-
-    Y --> C{".md changed<br/>and under MAX passes?<br/>(MAX default 2)"}
-    C -->|"no / capped"| DONE(["✅ done — added cost: $0"])
-    C -->|yes| R
-
-    subgraph L2["LAYER 2 · on yield · fresh context · cheap model"]
-        R["🔍 Reviewer subagent reads the doc<br/>as EXTERNAL input<br/>gaps · contradictions · dubious claims"]
-    end
-
-    R -->|findings| F2["Agent applies fixes = a write"]
-    F2 -->|re-validated| W
-    R -->|RAS| DONE
+```text
+   write / edit a .md
+        |
+        v
+   +----------------------------------------------------+
+   |  LAYER 1  -  on write  -  $0  -  deterministic      |
+   |  frontmatter . fences . placeholders . local links |
+   +----------------------------------------------------+
+        |
+        |-- issues --> agent fixes (= a write) --> re-enters LAYER 1 ^
+        |
+        '-- clean  -->  agent yields / commits
+                            |
+                            v
+   +----------------------------------------------------+
+   |  changed since last review                         |
+   |   AND  under MAX passes?      (MAX = 2 by default)  |
+   +----------------------------------------------------+
+        |
+        |-- no / capped -->  done  -  added cost: $0
+        |
+        '-- yes -->
+   +----------------------------------------------------+
+   |  LAYER 2  -  on yield  -  fresh context  -  cheap   |
+   |  reads the doc as EXTERNAL input ->                 |
+   |  gaps . contradictions . dubious claims            |
+   +----------------------------------------------------+
+        |
+        |-- RAS -->  done
+        |
+        '-- findings --> agent applies fix (= a write)
+                             '--> re-enters LAYER 1 ^   (loop bounded by MAX = 2)
 ```
 
 ## Two layers
