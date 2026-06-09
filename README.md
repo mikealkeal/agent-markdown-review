@@ -2,14 +2,14 @@
 
 **The ecosystem lints your *code* as the agent writes it. This validates what the agent *wrote* — your Markdown — structurally *and* semantically.**
 
-When an AI agent writes a `.md` (README, spec, ADR, notes, docs), it does it in one forward pass and does not re-read itself. You end up asking "re-read and check" every time — and every time it finds something. This wires that review in automatically, on the right trigger, so you stop asking.
+When an AI agent writes a `.md` (README, spec, ADR, notes, docs), it does it in one forward pass and does not re-read itself. You end up asking "re-read and check" every time — and every time it finds something. This wires that review into the right trigger — structural checks **enforced** on write, a fresh-context semantic pass on the yield/commit boundary — so you stop asking.
 
 ## Two layers
 
 | Layer | Catches | How | Cost |
 |-------|---------|-----|------|
 | **1 — Deterministic** | unclosed frontmatter/fences, unresolved placeholders, **broken local links** | a validator run on write → fed back to the agent | none, instant, guaranteed |
-| **2 — Semantic** | gaps, internal contradictions, dubious claims, blocking ambiguities | a **fresh-context** reviewer (errors decorrelated from the author's) | one cheap model call, only when a `.md` changed |
+| **2 — Semantic** | gaps, internal contradictions, dubious claims, blocking ambiguities | a **fresh-context** reviewer (errors decorrelated from the author's) | one model call (scales with file size), only when a `.md` changed |
 
 Why two layers and not just "re-read it"? Because same-context self-review is the *weakest* lever — see [METHODOLOGY.md](METHODOLOGY.md) (research-backed).
 
