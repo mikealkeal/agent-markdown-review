@@ -70,8 +70,8 @@ That's the whole bet: both layers exist to get the document **out** of the gener
 The **hooks themselves cost $0** — they run no model. Layer 1 (validation) and Layer 2's change-detection + review directive are pure logic. The *only* spend is the Layer 2 reviewer, and:
 
 - it runs on a **cheap, fast model** (Sonnet by default; set `AMR_REVIEW_MODEL`, e.g. `haiku`) — the review is near-mechanical, so the **decorrelated fresh context matters more than raw model power**;
-- it reviews **only the `git diff`**, not the whole file — a one-line edit no longer pays for a full-document read;
-- it **skips infra** (`.claude/`, `docs/`, `CLAUDE.md`) and **trivial diffs** (under `AMR_REVIEW_MIN_LINES`), and **batches** all changed files of a turn into one subagent;
+- it reviews **only the `git diff`** of the change, not the whole file — a one-line edit no longer pays for a full-document read (a new or untracked file falls back to a full read);
+- it **skips infra paths** (the `.claude/` tooling dirs, `docs/`, any `CLAUDE.md`; exact default list and override via `AMR_REVIEW_EXCLUDE`) and **trivial diffs** (under `AMR_REVIEW_MIN_LINES`), and **batches** all changed files of a turn into one subagent;
 - it fires **only when a `.md` actually changed**, capped at `AMR_REVIEW_MAX` (default 2) passes per file per session.
 
 In practice: **free on every write**, plus a cheap call — at most `AMR_REVIEW_MAX` per file — only when there is something new to review.

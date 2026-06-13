@@ -47,7 +47,7 @@ Conservative on purpose — it must not nudge the agent into "fixing" correct co
 The trigger fires on the yield/commit boundary — a `Stop` hook in the Claude Code adapter, a `pre-commit` in the git adapter. When a `.md` changed, the reviewer reads the document as **external input** (see [the brief](prompts/reviewer-brief.md)), so its errors are decorrelated from the author's. It is gated so cost stays marginal:
 
 1. nothing changed → no review;
-2. **infra files are skipped** — `.claude/` config, `docs/`, and `CLAUDE.md` are tooling, not deliverables (override with `AMR_REVIEW_EXCLUDE`);
+2. **infra files are skipped** — the `.claude/` tooling subdirs, `docs/`, and any `CLAUDE.md` are config, not deliverables (exact default list in the [Claude Code trigger README](triggers/claude-code/README.md); override with `AMR_REVIEW_EXCLUDE`);
 3. only the **diff** is reviewed, not the whole file — the change is extracted via `git diff HEAD` (a new or untracked file falls back to a full read);
 4. a change under `AMR_REVIEW_MIN_LINES` (default 6) is treated as trivial and skipped;
 5. a file is re-reviewed only if its **content changed** since the last review (sha256);
