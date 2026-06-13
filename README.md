@@ -69,7 +69,9 @@ That's the whole bet: both layers exist to get the document **out** of the gener
 
 The **hooks themselves cost $0** — they run no model. Layer 1 (validation) and Layer 2's change-detection + review directive are pure logic. The *only* spend is the Layer 2 reviewer, and:
 
-- it runs on a **cheap, fast model** (Sonnet by default; set `AMR_REVIEW_MODEL`) — the review is near-mechanical, so the **decorrelated fresh context matters more than raw model power**;
+- it runs on a **cheap, fast model** (Sonnet by default; set `AMR_REVIEW_MODEL`, e.g. `haiku`) — the review is near-mechanical, so the **decorrelated fresh context matters more than raw model power**;
+- it reviews **only the `git diff`**, not the whole file — a one-line edit no longer pays for a full-document read;
+- it **skips infra** (`.claude/`, `docs/`, `CLAUDE.md`) and **trivial diffs** (under `AMR_REVIEW_MIN_LINES`), and **batches** all changed files of a turn into one subagent;
 - it fires **only when a `.md` actually changed**, capped at `AMR_REVIEW_MAX` (default 2) passes per file per session.
 
 In practice: **free on every write**, plus a cheap call — at most `AMR_REVIEW_MAX` per file — only when there is something new to review.
@@ -90,7 +92,7 @@ Once installed, **there is nothing to run.** You write Markdown as usual and the
 2. **The agent finishes its turn** → if a `.md` changed, Layer 2 fires: the agent spawns a fresh-context reviewer that reads the doc as external input and reports gaps / contradictions / dubious claims; the agent applies the fixes (or flags a point as intentional), then stops.
 3. **Nothing changed?** → both layers stay silent and cost nothing.
 
-No slash command, no manual step. Pause it with `node setup.mjs --uninstall` (or remove just the `Stop` entry to keep Layer 1 only). Tune with `AMR_REVIEW_MAX` and `AMR_REVIEW_MODEL`.
+No slash command, no manual step. Pause it with `node setup.mjs --uninstall` (or remove just the `Stop` entry to keep Layer 1 only). Tune with `AMR_REVIEW_MAX`, `AMR_REVIEW_MODEL`, `AMR_REVIEW_MIN_LINES`, and `AMR_REVIEW_EXCLUDE`.
 
 With the **git pre-commit** flavor, "using it" is simply `git commit`: staged `.md` is validated, and reviewed too if you set `LLM_CMD`. See [triggers/git-pre-commit/](triggers/git-pre-commit/README.md).
 
