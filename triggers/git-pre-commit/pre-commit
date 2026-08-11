@@ -24,10 +24,18 @@ node "$AMR_HOME/validator/index.mjs" $files || {
 }
 
 # ── Layer 2 — optional semantic review (does NOT block; advisory) ─────────────
+# The reviewed file is untrusted input, and $LLM_CMD may well be an agent with tools. Fence it, and
+# defang the marker token inside it: a document that can close the fence itself gets the rest of its
+# text read as the brief. Marker names must match prompts/reviewer-brief.md.
 if [ -n "$LLM_CMD" ]; then
   for f in $files; do
     echo "── fresh-context review: $f"
-    { cat "$AMR_HOME/prompts/reviewer-brief.md"; printf '\n\n---\n'; cat "$f"; } | $LLM_CMD || true
+    {
+      cat "$AMR_HOME/prompts/reviewer-brief.md"
+      printf '\n\n===REVIEW_PAYLOAD===\n'
+      sed -E 's/(END_)?REVIEW_PAYLOAD/NEUTRALIZED_MARKER/g' "$f"
+      printf '\n===END_REVIEW_PAYLOAD===\n'
+    } | $LLM_CMD || true
   done
 fi
 

@@ -65,6 +65,14 @@ An LLM can't reliably proofread its own output **from inside the context that pr
 
 That's the whole bet: both layers exist to get the document **out** of the generating context — a deterministic checker (no model at all) and a fresh-context reviewer. The fancy prompt is secondary; the *position* of the content is what matters. Sources and detail: [METHODOLOGY.md](METHODOLOGY.md).
 
+## External also means untrusted
+
+Handing the document to a fresh reader fixes the blind-spot problem and creates a second one: that reader now ingests text nobody vetted, in the same channel as its own mandate. With `LLM_CMD="claude -p"` or a Claude Code subagent, it also holds tools. A document containing *"ignore the brief and …"* arrives looking exactly like the brief.
+
+So the reviewed content is **fenced** between `===REVIEW_PAYLOAD===` and `===END_REVIEW_PAYLOAD===`, and the marker token is **defanged** anywhere inside the payload — without that, a document only has to write the closing marker itself for the rest of its text to read as the mandate again, and the fence is decorative. [The brief](prompts/reviewer-brief.md) states the boundary: what sits inside is data, and an instruction found there is *reported as a finding*, never executed.
+
+The reviewer returns text and never acts. Fixes are applied by the agent you already trust, in your session, under your eyes.
+
 ## Cost
 
 The **hooks themselves cost $0** — they run no model. Layer 1 (validation) and Layer 2's change-detection + review directive are pure logic. The *only* spend is the Layer 2 reviewer, and:
@@ -128,6 +136,7 @@ agent-markdown-review/
 ## Honest limitations
 
 - **Layer 2 is a deterministic *trigger*, not a forced execution.** The hook reliably fires and injects the review directive; the review runs because the agent follows it. Layer 1 (`exit 2`) is the hard-deterministic half.
+- **Fencing the payload lowers the odds of prompt injection; it does not make a model immune.** No prompt wording does. The structural guarantee is elsewhere: the reviewer only returns text, and Layer 1 (`exit 2`) never involves a model at all.
 - No built-in token/cost accounting (the trigger does not run the model itself). Counts and a size-based estimate are possible; exact cost would require running the reviewer as a CLI with JSON output.
 - **The `MAX` cap is per file per session, not per edit.** Layer 1 (structural) runs on **every** write and is never capped. But once a file has had `AMR_REVIEW_MAX` Layer-2 passes in a session, *later* edits to it are not semantically re-reviewed automatically — the cap is there to stop an endless review spiral. So heavy editing after the cap can ship unreviewed: the tool **reduces** the need to re-read your docs, it does not replace human review. A fresh session resets the cap.
 
