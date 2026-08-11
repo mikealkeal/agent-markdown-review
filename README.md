@@ -79,10 +79,12 @@ The **hooks themselves cost $0** — they run no model. Layer 1 (validation) and
 
 - it runs on a **cheap, fast model** (Sonnet by default; set `AMR_REVIEW_MODEL`, e.g. `haiku`) — the review is near-mechanical, so the **decorrelated fresh context matters more than raw model power**;
 - it reviews **only the `git diff`** of the change, not the whole file — a one-line edit no longer pays for a full-document read (a new or untracked file falls back to a full read);
-- it **skips infra paths** (the `.claude/` tooling dirs, `docs/`, any `CLAUDE.md`; exact default list and override via `AMR_REVIEW_EXCLUDE`) and **trivial diffs** (under `AMR_REVIEW_MIN_LINES`), and **batches** all changed files of a turn into one subagent;
+- it **skips infra paths** (the `.claude/` tooling dirs, `docs/`, any `CLAUDE.md`; exact default list and override via `AMR_REVIEW_EXCLUDE`) and **trivial diffs** (under `AMR_REVIEW_MIN_LINES`), and **batches** all changed files of a turn into one subagent. Note that `docs/` is excluded **by path**: if your documentation folder *is* the deliverable, override `AMR_REVIEW_EXCLUDE` or it will never be reviewed;
 - it fires **only when a `.md` actually changed**, capped at `AMR_REVIEW_MAX` (default 2) passes per file per session.
 
 In practice: **free on every write**, plus a cheap call — at most `AMR_REVIEW_MAX` per file — only when there is something new to review.
+
+**These gates belong to the Claude Code adapter.** The git `pre-commit` flavor has no session to track: it reviews each staged `.md` whole, one `$LLM_CMD` call per file, with no diff, no exclusion list, no threshold and no cap. Budget accordingly on a commit that touches many Markdown files.
 
 ## Quickstart (Claude Code)
 

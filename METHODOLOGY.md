@@ -44,7 +44,7 @@ Conservative on purpose — it must not nudge the agent into "fixing" correct co
 
 ## Layer 2 — fresh-context semantic review
 
-The trigger fires on the yield/commit boundary — a `Stop` hook in the Claude Code adapter, a `pre-commit` in the git adapter. When a `.md` changed, the reviewer reads the document as **external input** (see [the brief](prompts/reviewer-brief.md)), so its errors are decorrelated from the author's. It is gated so cost stays marginal:
+The trigger fires on the yield/commit boundary — a `Stop` hook in the Claude Code adapter, a `pre-commit` in the git adapter. When a `.md` changed, the reviewer reads the document as **external input** (see [the brief](prompts/reviewer-brief.md)), so its errors are decorrelated from the author's. In the **Claude Code adapter** it is gated so cost stays marginal:
 
 1. nothing changed → no review;
 2. **infra files are skipped** — the `.claude/` tooling subdirs, `docs/`, and any `CLAUDE.md` are config, not deliverables (exact default list in the [Claude Code trigger README](triggers/claude-code/README.md); override with `AMR_REVIEW_EXCLUDE`);
@@ -53,6 +53,8 @@ The trigger fires on the yield/commit boundary — a `Stop` hook in the Claude C
 5. a file is re-reviewed only if its **content changed** since the last review (sha256);
 6. at most `AMR_REVIEW_MAX` (default 2) passes per file per session — a *session* is one Claude Code session, tracked in a temp file keyed by its id (a new session resets the cap);
 7. all changed files of a turn are reviewed by **one** batched subagent, not one per file.
+
+**The git adapter is not gated that way.** `pre-commit` has no session to track: it reviews each staged `.md` *whole* (no diff), one `$LLM_CMD` call per file, with no exclusion list, no threshold and no cap. That is a deliberate difference, not an oversight, but it means the cost profile above is the Claude Code adapter's. On a commit touching many Markdown files, budget accordingly.
 
 The crucial property is the **fresh context** — a separate reviewer (subagent or separate session) sees what the generating context cannot. Its value is in **detection**: the agent then applies the fix *with that external signal in hand*, which is a different thing from unprompted same-context self-review.
 
