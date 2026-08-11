@@ -138,6 +138,7 @@ agent-markdown-review/
 ## Honest limitations
 
 - **Layer 2 is a deterministic *trigger*, not a forced execution.** The hook reliably fires and injects the review directive; the review runs because the agent follows it. Layer 1 (`exit 2`) is the hard-deterministic half.
+- **The Claude Code batch is capped at 5 files per turn, and a diff over 200 lines is truncated** (the reviewer is told, and can open the file). The overflow files are not dropped — the session's touched-file list is cumulative, so they come up at the next yield — but they are lost if the session ends first.
 - **Fencing the payload lowers the odds of prompt injection; it does not make a model immune.** No prompt wording does. The structural guarantee is elsewhere: the reviewer only returns text, and Layer 1 (`exit 2`) never involves a model at all.
 - No built-in token/cost accounting (the trigger does not run the model itself). Counts and a size-based estimate are possible; exact cost would require running the reviewer as a CLI with JSON output.
 - **The `MAX` cap is per file per session, not per edit.** Layer 1 (structural) runs on **every** write and is never capped. But once a file has had `AMR_REVIEW_MAX` Layer-2 passes in a session, *later* edits to it are not semantically re-reviewed automatically — the cap is there to stop an endless review spiral. So heavy editing after the cap can ship unreviewed: the tool **reduces** the need to re-read your docs, it does not replace human review. A fresh session resets the cap.

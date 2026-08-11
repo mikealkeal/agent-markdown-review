@@ -52,7 +52,8 @@ The trigger fires on the yield/commit boundary — a `Stop` hook in the Claude C
 4. a change under `AMR_REVIEW_MIN_LINES` (default 6) is treated as trivial and skipped;
 5. a file is re-reviewed only if its **content changed** since the last review (sha256);
 6. at most `AMR_REVIEW_MAX` (default 2) passes per file per session — a *session* is one Claude Code session, tracked in a temp file keyed by its id (a new session resets the cap);
-7. all changed files of a turn are reviewed by **one** batched subagent, not one per file.
+7. all changed files of a turn are reviewed by **one** batched subagent, not one per file;
+8. that batch is capped at **5 files per turn**, and a diff longer than **200 lines** is truncated before being forwarded (with a visible marker telling the reviewer to open the file). Files beyond the fifth are not dropped: the session's touched-file list is cumulative, so they are picked up at the next yield. They are lost only if the session ends first.
 
 **The git adapter is not gated that way.** `pre-commit` has no session to track: it reviews each staged `.md` *whole* (no diff), one `$LLM_CMD` call per file, with no exclusion list, no threshold and no cap. That is a deliberate difference, not an oversight, but it means the cost profile above is the Claude Code adapter's. On a commit touching many Markdown files, budget accordingly.
 
